@@ -1,3 +1,5 @@
+![Screenshot](devdata/IMG_5437.jpg)
+
 FYI: I stole this code from https://github.com/nospig/3d-print-monitor and hacked it arround a bit.
 
 Thanks nospig!
