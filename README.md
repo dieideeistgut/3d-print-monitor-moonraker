@@ -1,3 +1,9 @@
+FYI: I stole this code from https://github.com/nospig/3d-print-monitor and hacked it arround a bit.
+
+Thanks nospig!
+
+---
+
 # 3d-print-monitor
 
 OctoPrint monitor for 320x240 TFT displays and a ESP8266 processor. Built with Visual Studio Code and PlatformIO.

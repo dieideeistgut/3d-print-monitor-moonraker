@@ -8,7 +8,7 @@ const int PRINT_MONITOR_INERVAL         = 30 * SECONDS_MULT;
 const int DISPLAY_CYCLE_INERVAL         = 30 * SECONDS_MULT;
 
 // TODO, calculate sizes
-const int PRINTER_JSON_SIZE  = 512;           
+const int PRINTER_JSON_SIZE  = 512;
 const int SETTINGS_JSON_SIZE = 512;
 
 void SettingsManager::init()
@@ -34,7 +34,7 @@ void SettingsManager::init()
         resetSettings();
         saveSettings();
     }
-    
+
     loadSettings();
 }
 
@@ -92,7 +92,7 @@ void SettingsManager::loadSettings()
     data.currentDisplay = doc["CurrentDisplay"];
 
     jsonSettings.close();
-    
+
     // testing
     //Serial.println();
     //serializeJson(doc, Serial);
@@ -122,20 +122,21 @@ void SettingsManager::loadPrinters()
         printer->apiKey = (const char*)doc["APIKey"];
         printer->displayName = (const char*)doc["DisplayName"];
         printer->enabled = doc["Enabled"];
+        printer->type = (const char*)doc["Type"];
 
         printerSettings.close();
 
         // testing
         //Serial.println();
         //serializeJson(doc, Serial);
-        //Serial.println();        
+        //Serial.println();
     }
 }
 
 void SettingsManager::saveSettings()
 {
     File jsonSettings;
-    DynamicJsonDocument doc(SETTINGS_JSON_SIZE);   
+    DynamicJsonDocument doc(SETTINGS_JSON_SIZE);
 
     doc["WeatherAPIKey"] = data.openWeatherMapAPIKey;
     doc["WeatherLLocationID"] = data.openWeatherLocationID;
@@ -163,9 +164,9 @@ void SettingsManager::saveSettings()
     {
         Serial.println("Unable to save settings file.");
     }
-    
+
     // testing
-    //serializeJson(doc, Serial); 
+    //serializeJson(doc, Serial);
     //Serial.println();
 
     savePrinters();
@@ -189,6 +190,7 @@ void SettingsManager::savePrinters()
         doc["APIKey"] = printer->apiKey;
         doc["DisplayName"] = printer->displayName;
         doc["Enabled"] = printer->enabled;
+        doc["Type"] = printer->type;
 
         printerSettings = SPIFFS.open(buffer, "w");
         if(printerSettings)
@@ -198,7 +200,7 @@ void SettingsManager::savePrinters()
             printerSettings.close();
 
             // testing
-            //serializeJson(doc, Serial); 
+            //serializeJson(doc, Serial);
             //Serial.println();
         }
         else
@@ -340,7 +342,7 @@ OctoPrinterData* SettingsManager::getPrinterData(int printerNum)
     return printersData[printerNum];
 }
 
-void SettingsManager::addNewPrinter(String address, int port, String userName, String password, String apiKey, String displayName, bool enabled)
+void SettingsManager::addNewPrinter(String address, int port, String userName, String password, String apiKey, String displayName, bool enabled, String type)
 {
     OctoPrinterData* newPrinter = printersData[data.numPrinters];
 
@@ -351,12 +353,13 @@ void SettingsManager::addNewPrinter(String address, int port, String userName, S
     newPrinter->apiKey = apiKey;
     newPrinter->displayName = displayName;
     newPrinter->enabled = enabled;
+    newPrinter->type = type;
     data.numPrinters++;
 
     updateSettings();
 }
 
-void SettingsManager::editPrinter(int printerNum, String address, int port, String userName, String password, String apiKey, String displayName, bool enabled)
+void SettingsManager::editPrinter(int printerNum, String address, int port, String userName, String password, String apiKey, String displayName, bool enabled, String type)
 {
     OctoPrinterData* printer = printersData[printerNum];
 
@@ -367,6 +370,7 @@ void SettingsManager::editPrinter(int printerNum, String address, int port, Stri
     printer->apiKey = apiKey;
     printer->displayName = displayName;
     printer->enabled = enabled;
+    printer->type = type;
 
     updateSettings();
 }

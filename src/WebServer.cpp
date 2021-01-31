@@ -13,9 +13,9 @@ String WebServer::currentWeatherJson = "";
 String WebServer::currentPrinterJson = "";
 bool WebServer::screenGrabRequest = false;
 
-SettingsManager* WebServer::settingsManager;    
+SettingsManager* WebServer::settingsManager;
 
-static const char NAV_BAR[] PROGMEM = 
+static const char NAV_BAR[] PROGMEM =
     "<nav class='navbar navbar-expand-sm bg-dark navbar-dark fixed-top'>"
     "<a class='navbar-brand' href='index.html'>OctoPrint Monitor</a>"
     "<ul class='navbar-nav'>"
@@ -39,7 +39,7 @@ static const char NAV_BAR[] PROGMEM =
 void WebServer::init(SettingsManager* settingsManager)
 {
     this->settingsManager = settingsManager;
-    
+
     webSocket.onEvent(onEvent);
     server.addHandler(&webSocket);
     server.addHandler(&events);
@@ -70,7 +70,7 @@ void WebServer::init(SettingsManager* settingsManager)
 
     server.on("/weatherSettings.html", HTTP_GET, [](AsyncWebServerRequest *request)
     {
-        request->send_P(200, "text/html", weatherSettings_html, tokenProcessor); 
+        request->send_P(200, "text/html", weatherSettings_html, tokenProcessor);
         //request->send(SPIFFS, "/weatherSettings.html", String(), false, tokenProcessor);
     });
 
@@ -165,7 +165,7 @@ void WebServer::init(SettingsManager* settingsManager)
     {
         request->send_P(200, "application/javascript", settings_js);
     });
-    
+
     server.on("/js/station.js", HTTP_GET, [](AsyncWebServerRequest *request)
     {
         //request->send(SPIFFS, "/js/station.js", String(), false, tokenProcessor);
@@ -219,10 +219,10 @@ void WebServer::updateCurrentWeather(OpenWeatherMapCurrentData* currentWeather)
         webSocket.textAll(output);
     }
 }
-    
+
 void WebServer::updatePrintMonitorInfo(OctoPrintMonitorData* printerInfo, String printerName, bool enabled)
 {
-    const size_t capacity = 512;  
+    const size_t capacity = 512;
     DynamicJsonDocument jsonDoc(capacity);
     String output;
 
@@ -241,7 +241,7 @@ void WebServer::updatePrintMonitorInfo(OctoPrintMonitorData* printerInfo, String
     {
         webSocket.textAll(output);
     }
-}   
+}
 
 void WebServer::updateClientOnConnect()
 {
@@ -266,11 +266,11 @@ String WebServer::tokenProcessor(const String& token)
     {
         return FPSTR(NAV_BAR);
     }
-    if(token == "WEATHERLOCATIONKEY")    
+    if(token == "WEATHERLOCATIONKEY")
     {
         return settingsManager->getOpenWeatherlocationID();
     }
-    if(token == "WEATHERAPIKEY")    
+    if(token == "WEATHERAPIKEY")
     {
         return settingsManager->getOpenWeatherApiKey();
     }
@@ -281,15 +281,15 @@ String WebServer::tokenProcessor(const String& token)
             return "Checked";
         }
     }
-    if(token == "CURRENTWEATHERINTERVAL")    
+    if(token == "CURRENTWEATHERINTERVAL")
     {
         return String(settingsManager->getCurrentWeatherInterval() / SECONDS_MULT);
     }
-    if(token == "PRINTMONITORINTERVAL")    
+    if(token == "PRINTMONITORINTERVAL")
     {
         return String(settingsManager->getPrintMonitorInterval() / SECONDS_MULT);
     }
-    if(token == "DISPLAYCYCLEINTERVAL")    
+    if(token == "DISPLAYCYCLEINTERVAL")
     {
         return String(settingsManager->getDisplayCycleInterval() / SECONDS_MULT);
     }
@@ -322,14 +322,14 @@ String WebServer::tokenProcessor(const String& token)
         {
             return "Checked";
         }
-    }    
+    }
     if(token == "DISPLAYCYCLEMODE")
     {
         if(settingsManager->getCurrentDisplay() == CYCLE_DISPLAY_SETTING)
         {
             return "Checked";
         }
-    }    
+    }
     if(token == "TIME1CHECKED")
     {
         if(settingsManager->getClockFormat() == ClockFormat_24h)
@@ -387,9 +387,9 @@ String WebServer::createPrinterList()
         {
             checkbox = disabledBox;
         }
-        
-        sprintf(buffer, "<tr><td class='printer-id'>%d</td><td class='display-name'>%s</td><td>%s</td><td>%d</td>%s<td>%s%s</td></tr>", 
-            i+1, data->displayName.c_str(), data->address.c_str(), data->port, checkbox, editButton, deleteButton);
+
+        sprintf(buffer, "<tr><td class='printer-id'>%d</td><td class='display-name'>%s</td><td>%s</td><td>%d</td>%s<td>%s</td><td>%s%s</td></tr>",
+            i+1, data->displayName.c_str(), data->address.c_str(), data->port, checkbox, data->type.c_str(), editButton, deleteButton);
         printerRow = String(buffer);
 
         response += printerRow;
@@ -411,7 +411,7 @@ String WebServer::createDisplayList()
         checked = "checked";
     }
     response += createDisplayButton(WEATHER_DISPLAY_SETTING, checked, "Current Weather");
-    
+
     for(int i=0; i<numPrinters; i++)
     {
         OctoPrinterData* data = settingsManager->getPrinterData(i);
@@ -424,7 +424,7 @@ String WebServer::createDisplayList()
         {
             checked = "";
         }
-        
+
         response += createDisplayButton(i + 1, checked, data->displayName);
     }
 
@@ -438,9 +438,9 @@ String WebServer::createDisplayButton(int id, String checked, String title)
     const char buttonHeader[] = "<div class='form-group'><div class='form-check'><label class='form-check-label'>";
     const char buttonInfo[] = "<input type='radio' class='form-check-input' value='%d' name='optdisplay' %s>%s";
     const char buttonFooter[] = "</label></div></div>";
-    
+
     sprintf(buffer, buttonInfo, id, checked.c_str(), title.c_str());
-    
+
     button += buttonHeader;
     button += buffer;
     button += buttonFooter;
@@ -461,7 +461,7 @@ void WebServer::handleUpdateWeatherSettings(AsyncWebServerRequest* request)
         settingsManager->setOpenWeatherApiKey(p->value());
     }
     if(request->hasParam("weatherEnabled"))
-    {        
+    {
         settingsManager->setWeatherEnabled(true);
     }
     else
@@ -469,13 +469,13 @@ void WebServer::handleUpdateWeatherSettings(AsyncWebServerRequest* request)
         settingsManager->setWeatherEnabled(false);
     }
     if(request->hasParam("displayMetric"))
-    {        
+    {
         settingsManager->setDisplayMetric(true);
     }
     else
     {
         settingsManager->setDisplayMetric(false);
-    }   
+    }
 }
 
 void WebServer::handleUpdateDisplaySettings(AsyncWebServerRequest* request)
@@ -487,7 +487,7 @@ void WebServer::handleUpdateDisplaySettings(AsyncWebServerRequest* request)
     else if(request->hasParam("optdisplay"))
     {
         AsyncWebParameter* p = request->getParam("optdisplay");
-        
+
         settingsManager->setCurrentDisplay(p->value().toInt());
     }
     if(request->hasParam("brightness"))
@@ -513,7 +513,7 @@ void WebServer::handleUpdateTimings(AsyncWebServerRequest* request)
     {
         AsyncWebParameter* p = request->getParam("displayCycleInterval");
         settingsManager->setDisplayCycleInterval(p->value().toInt() * SECONDS_MULT);
-    }    
+    }
 }
 
 void WebServer::handleUpdateClockSettings(AsyncWebServerRequest* request)
@@ -526,7 +526,7 @@ void WebServer::handleUpdateClockSettings(AsyncWebServerRequest* request)
     if(request->hasParam("optTimeFormat"))
     {
         AsyncWebParameter* p = request->getParam("optTimeFormat");
-        
+
         if(p->value() == "24hour")
         {
             settingsManager->setClockFormat(ClockFormat_24h);
@@ -539,7 +539,7 @@ void WebServer::handleUpdateClockSettings(AsyncWebServerRequest* request)
     if(request->hasParam("optClockFormat"))
     {
         AsyncWebParameter* p = request->getParam("optClockFormat");
-        
+
         if(p->value() == "ddmmyy")
         {
             settingsManager->setDateFormat(DateFormat_DDMMYY);
@@ -567,7 +567,8 @@ void WebServer::handleAddNewPrinter(AsyncWebServerRequest* request)
         request->getParam("octoPrintPassword")->value(),
         request->getParam("octoPrintAPIKey")->value(),
         request->getParam("octoPrintDisplayName")->value(),
-        enabled
+        enabled,
+        request->getParam("octoPrintType")->value()
     );
 }
 
@@ -575,7 +576,7 @@ void WebServer::handleDeletePrinter(AsyncWebServerRequest* request)
 {
     int printerId;
 
-    printerId = request->getParam("printerId")->value().toInt(); 
+    printerId = request->getParam("printerId")->value().toInt();
     printerId--;
 
     settingsManager->deletePrinter(printerId);
@@ -586,7 +587,7 @@ void WebServer::handleEditPrinter(AsyncWebServerRequest* request)
     int printerId;
     bool enabled = false;
 
-    printerId = request->getParam("printerId")->value().toInt(); 
+    printerId = request->getParam("printerId")->value().toInt();
     printerId--;
 
     if(request->hasParam("editEnabled"))
@@ -602,7 +603,8 @@ void WebServer::handleEditPrinter(AsyncWebServerRequest* request)
         request->getParam("editPassword")->value(),
         request->getParam("editAPIKey")->value(),
         request->getParam("editDisplayName")->value(),
-        enabled
+        enabled,
+        request->getParam("editPrintType")->value()
     );
 }
 
@@ -616,7 +618,7 @@ void WebServer::handleGetPrinter(AsyncWebServerRequest* request)
 
     OctoPrinterData* printer = settingsManager->getPrinterData(printerID);
 
-    const size_t capacity = 512;  
+    const size_t capacity = 512;
     DynamicJsonDocument doc(capacity);
     String reponse;
 
@@ -627,6 +629,7 @@ void WebServer::handleGetPrinter(AsyncWebServerRequest* request)
     doc["apiKey"] = printer->apiKey;
     doc["displayName"] = printer->displayName;
     doc["enabled"] = printer->enabled;
+    doc["type"] = printer->type;
 
     serializeJson(doc, reponse);
 

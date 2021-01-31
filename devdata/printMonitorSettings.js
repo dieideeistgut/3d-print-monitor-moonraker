@@ -1,5 +1,5 @@
 function init()
-{   
+{
     if ($('#printMonitorEnabled').is(":checked"))
     {
         $("#printMonitorForm").show();
@@ -33,20 +33,20 @@ $(function () {
 
         e.preventDefault();
         $tr = $(this).closest('tr');
-        $.confirmModal('Are you sure you want to delete this printer: ' + $('.display-name', $tr).text() + '?' + '<br>Deleting a printer will reset your display settings.', 
+        $.confirmModal('Are you sure you want to delete this printer: ' + $('.display-name', $tr).text() + '?' + '<br>Deleting a printer will reset your display settings.',
                 options, function (el) {
             window.location.href = "/deletePrinter.html?printerId=" + $('.printer-id', $tr).text();
         });
     });
 });
 
-$(".btn[data-target='#editPrinterModal']").click(function() 
+$(".btn[data-target='#editPrinterModal']").click(function()
 {
-    var columnValues = $(this).parent().siblings().map(function() 
+    var columnValues = $(this).parent().siblings().map(function()
     {
         return $(this).text();
     }).get();
-        
+
     $.get('getPrinter.html', 'printerId=' + columnValues[0],
         function(response)
         {
@@ -59,7 +59,8 @@ $(".btn[data-target='#editPrinterModal']").click(function()
             $('#editPrinterModal').find('#editUsername').val(response.username);
             $('#editPrinterModal').find('#editPassword').val(response.password);
             $('#editPrinterModal').find('#editAPIKey').val(response.apiKey);
-            $('#editPrinterModal').find('#editEnabled').prop('checked', response.enabled);            
+            $('#editPrinterModal').find('#editEnabled').prop('checked', response.enabled);
+            $('#editPrinterModal').find('#editPrintType').val(response.type);
         }, "json"
     );
 });

@@ -4,6 +4,8 @@
 #include "TFT_eSPI.h"
 #include <time.h>
 #include "icons/weatherIcons.h"
+#include "fonts/PlexMono13.h"
+#include "fonts/PlexMono36.h"
 #include "Settings.h"
 
 const char daysOfTheWeek[7][12] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -26,7 +28,7 @@ DisplayTFT::DisplayTFT()
     showingNoPrintInfo = false;
     showingNotEnabled = false;
 }
- 
+
 void DisplayTFT::setDisplayBrightness(int percent)
 {
     brightness = (MAX_BRIGHTNESS_VALUE * percent) / 100;
@@ -36,11 +38,12 @@ void DisplayTFT::setDisplayBrightness(int percent)
 void DisplayTFT::drawStartupDisplay()
 {
     tft->fillScreen(BACKGROUND_COLOUR);
-
     tft->setTextFont(4);
     tft->setTextDatum(BC_DATUM);
-    tft->setTextColor(TFT_WHITE, BACKGROUND_COLOUR); 
+    tft->setTextColor(TFT_WHITE, BACKGROUND_COLOUR);
+    tft->loadFont(AA_FONT_SMALL);
     tft->drawString("Connecting.", tft->width()/2, tft->height()/2);
+    tft->unloadFont();
 }
 
 void DisplayTFT::clearDisplay()
@@ -81,10 +84,10 @@ void DisplayTFT::drawCurrentWeather(OpenWeatherMapCurrentData* currentWeather, b
             {
                 drawWeatherNotEnabled();
             }
-            
+
         default:
             break;
-    }    
+    }
 }
 
 void DisplayTFT::drawWiFiStrength(long dBm)
@@ -108,7 +111,7 @@ void DisplayTFT::drawWiFiStrength(long dBm)
             barColour = BACKGROUND_COLOUR;
         }
         tft->drawLine(x, y, x, y-barHeight, barColour);
-        
+
         barHeight += 2;
         barValue += 20;
         x += 2;
@@ -116,40 +119,47 @@ void DisplayTFT::drawWiFiStrength(long dBm)
 }
 
 /****************************************************************************************
- * 
+ *
  *  Drawing routines
- * 
+ *
 ****************************************************************************************/
 
 int DisplayTFT::drawCurrentWeather(OpenWeatherMapCurrentData* currentWeather, int y)
 {
     // maybe best just to wipe as not updated often
+    // tft->fillRect(0, y+20, tft->width(), 80, BACKGROUND_COLOUR);
     tft->fillRect(0, y+20, tft->width(), 80, BACKGROUND_COLOUR);
 
     if(currentWeather->validData)
-    {       
-        tft->setTextFont(2);
+    {
+        //tft->setTextFont(2);
+        tft->loadFont(AA_FONT_SMALL);
         tft->setTextDatum(TC_DATUM);
-        tft->setTextColor(SECTION_HEADER_COLOUR); 
-        tft->drawString(currentWeather->location, tft->width()/2, y+2); 
+        tft->setTextColor(SECTION_HEADER_COLOUR, BACKGROUND_COLOUR);
+        String tempText= currentWeather->location;
+        tempText.toUpperCase();
+        tft->drawString(tempText, tft->width()/2, y + 6);
+        tft->unloadFont();
 
-        tft->setTextFont(4);
-        tft->setTextColor(TEMPERATURE_COLOUR); 
+        //tft->setTextFont(4);
+        tft->setTextColor(TEMPERATURE_COLOUR, BACKGROUND_COLOUR);
+        tft->loadFont(AA_FONT_LARGE);
 
         String tempString = String(currentWeather->temp, 1);
-        int x = tft->width()/2 - 40;
+        int x = tft->width()/2 - 60;
         int widthTemp;
 
         tft->setTextDatum(TR_DATUM);
-        tft->drawString(tempString + getTempPostfix(), x , y + 40);    
+        tft->drawString(tempString + getTempPostfix(), x , y + 35);
         widthTemp = tft->textWidth(tempString + getTempPostfix());
+        tft->unloadFont();
 
         String description = currentWeather->description;
 
         bool truncatedDescription = false;
 
-        tft->setTextFont(2);
-        tft->setTextColor(CURRENT_WEATHER_CONDITIONS_COLOUR); 
+        //tft->setTextFont(2);
+        tft->setTextColor(CURRENT_WEATHER_CONDITIONS_COLOUR, BACKGROUND_COLOUR);
         tft->setTextDatum(TL_DATUM);
 
         while(tft->textWidth(description) > (tft->width() - (x - widthTemp)))
@@ -162,9 +172,14 @@ int DisplayTFT::drawCurrentWeather(OpenWeatherMapCurrentData* currentWeather, in
         {
             description = description + "...";
         }
-        tft->drawString(description, x - widthTemp, y + 82);    
 
-        tft->pushImage(160, y+30, WEATHER_ICON_WIDTH, WEATHER_ICON_HEIGHT, getIconData(currentWeather->icon));
+        tft->loadFont(AA_FONT_SMALL);
+        tempText= description;
+        tempText.toUpperCase();
+        tft->drawString(tempText, x - widthTemp, y + 68);
+        tft->unloadFont();
+
+        tft->pushImage(220, y+30, WEATHER_ICON_WIDTH, WEATHER_ICON_HEIGHT, getIconData(currentWeather->icon));
 
         return x - widthTemp;
     }
@@ -174,11 +189,11 @@ int DisplayTFT::drawCurrentWeather(OpenWeatherMapCurrentData* currentWeather, in
 
 void DisplayTFT::drawTimeDisplay(unsigned long epochTime, int y)
 {
-    tft->drawLine(0, y, tft->width(), y, SECTION_HEADER_LINE_COLOUR); 
+    tft->drawLine(0, y, tft->width(), y, SECTION_HEADER_LINE_COLOUR);
 
-    tft->setTextFont(2);
-    tft->setTextColor(TIME_TEXT_COLOUR, BACKGROUND_COLOUR); 
-   
+    //tft->setTextFont(2);
+    tft->setTextColor(TIME_TEXT_COLOUR, BACKGROUND_COLOUR);
+
     time_t time = epochTime;
     struct tm* timeInfo;
     timeInfo = gmtime(&time);
@@ -187,14 +202,15 @@ void DisplayTFT::drawTimeDisplay(unsigned long epochTime, int y)
     y += TIME_HEIGHT;
 
     tft->setTextDatum(BR_DATUM);
-   
+    tft->loadFont(AA_FONT_SMALL);
+
     formatClockString(buffer, timeInfo);
     tft->setTextPadding(tft->textWidth("11:59pm"));
-    tft->drawString(buffer, tft->width()/2-35, y); 
+    tft->drawString(buffer, tft->width()/2-35, y);
 
     tft->setTextDatum(BC_DATUM);
     tft->setTextPadding(tft->textWidth(daysOfTheWeek[3]));  // Wed longest?
-    tft->drawString(daysOfTheWeek[timeInfo->tm_wday], tft->width()/2, y); 
+    tft->drawString(daysOfTheWeek[timeInfo->tm_wday], tft->width()/2, y);
 
     tft->setTextDatum(BL_DATUM);
     tft->setTextPadding(tft->textWidth("31/12/99"));
@@ -202,14 +218,16 @@ void DisplayTFT::drawTimeDisplay(unsigned long epochTime, int y)
     switch(getDateFormat())
     {
         case DateFormat_DDMMYY:
-            sprintf(buffer, "%d/%d/%02d", timeInfo->tm_mday, timeInfo->tm_mon+1, (timeInfo->tm_year+1900) % 100);
+            sprintf(buffer, "%d.%d.%02d", timeInfo->tm_mday, timeInfo->tm_mon+1, (timeInfo->tm_year+1900) % 100);
             break;
         case DateFormat_MMDDYY:
-            sprintf(buffer, "%d/%d/%02d", timeInfo->tm_mon+1, timeInfo->tm_mday, (timeInfo->tm_year+1900) % 100);
-            break;        
+            sprintf(buffer, "%d.%d.%02d", timeInfo->tm_mon+1, timeInfo->tm_mday, (timeInfo->tm_year+1900) % 100);
+            break;
     }
-    
-    tft->drawString(buffer, tft->width()/2+35, y); 
+
+    tft->drawString(buffer, tft->width()/2+35, y);
+
+    tft->unloadFont();
 }
 
 void DisplayTFT::drawDetailedCurrentWeather(OpenWeatherMapCurrentData* currentWeather, int y)
@@ -221,67 +239,69 @@ void DisplayTFT::drawDetailedCurrentWeather(OpenWeatherMapCurrentData* currentWe
 
     x = drawCurrentWeather(currentWeather, y);
 
-    y += 130;
+    y += 100;
 
-    tft->drawLine(0, y, tft->width(), y, SECTION_HEADER_LINE_COLOUR); 
+    tft->drawLine(0, y, tft->width(), y, SECTION_HEADER_LINE_COLOUR);
 
     y += 15;
 
     tft->fillRect(0, y, tft->width(), 150, BACKGROUND_COLOUR);
 
+    tft->loadFont(AA_FONT_SMALL);
+
     if(currentWeather->validData)
     {
-        tft->setTextFont(2);
+        //tft->setTextFont(2);
         tft->setTextDatum(TL_DATUM);
 
         // min and max temps
         sprintf(buffer, "Min | Max: ");
         width = tft->textWidth(buffer);
-        tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR); 
-        tft->drawString(buffer, x, y);    
+        tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR, BACKGROUND_COLOUR);
+        tft->drawString(buffer, x, y);
 
         sprintf(buffer, "%.1f%s | Max: %.1f%s", currentWeather->tempMin, getTempPostfix(), currentWeather->tempMax, getTempPostfix());
-        tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR); 
-        tft->drawString(buffer, x + width, y);    
+        tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR, BACKGROUND_COLOUR);
+        tft->drawString(buffer, x + width, y);
 
         y += tft->fontHeight();
 
         // humidity
         sprintf(buffer, "Humidity: ");
         width = tft->textWidth(buffer);
-        tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR); 
-        tft->drawString(buffer, x, y);    
-        
+        tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR, BACKGROUND_COLOUR);
+        tft->drawString(buffer, x, y);
+
         sprintf(buffer, "%d%%", currentWeather->humidity);
-        tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR); 
-        tft->drawString(buffer, x + width, y);    
-        
+        tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR, BACKGROUND_COLOUR);
+        tft->drawString(buffer, x + width, y);
+
         y += tft->fontHeight();
 
         // pressure
-        tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR); 
+        tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR, BACKGROUND_COLOUR);
         sprintf(buffer, "Pressure: ");
         width = tft->textWidth(buffer);
-        tft->drawString(buffer, x, y);    
+        tft->drawString(buffer, x, y);
 
         if(getDisplayMetric())
         {
             sprintf(buffer, "%d hpa", currentWeather->pressure);
         }
         else
-        {     
+        {
             sprintf(buffer, "%d mb", currentWeather->pressure);
         }
-        tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR); 
-        tft->drawString(buffer, x + width, y);    
+        tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR, BACKGROUND_COLOUR);
+        tft->drawString(buffer, x + width, y);
 
         y += tft->fontHeight();
 
         // wind
-        tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR); 
+        tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR, BACKGROUND_COLOUR);
         sprintf(buffer, "Wind: ");
         width = tft->textWidth(buffer);
-        tft->drawString(buffer, x, y);    
+        tft->drawString(buffer, x, y);
 
         if(getDisplayMetric())
         {
@@ -291,85 +311,88 @@ void DisplayTFT::drawDetailedCurrentWeather(OpenWeatherMapCurrentData* currentWe
         {
             sprintf(buffer, "%.1fmph from %.0f degress", currentWeather->windSpeed, currentWeather->windDeg);
         }
-        
-        tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR); 
-        tft->drawString(buffer, x + width, y);    
+
+        tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR, BACKGROUND_COLOUR);
+        tft->drawString(buffer, x + width, y);
 
         y += tft->fontHeight();
 
         // clouds
         if(currentWeather->cloudPercentage > -1)
         {
-            tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR); 
+            tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR, BACKGROUND_COLOUR);
             sprintf(buffer, "Clouds: ");
             width = tft->textWidth(buffer);
-            tft->drawString(buffer, x, y);    
+            tft->drawString(buffer, x, y);
 
             sprintf(buffer, "%d%%", currentWeather->cloudPercentage);
-            tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR); 
-            tft->drawString(buffer, x + width, y);    
+            tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR, BACKGROUND_COLOUR);
+            tft->drawString(buffer, x + width, y);
             y += tft->fontHeight();
         }
 
         // rain
         if(currentWeather->rainOneHour > -1)
         {
-            tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR); 
+            tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR, BACKGROUND_COLOUR);
             sprintf(buffer, "Rain: ");
             width = tft->textWidth(buffer);
-            tft->drawString(buffer, x, y);    
+            tft->drawString(buffer, x, y);
 
             sprintf(buffer, "1h %dmm, 3h %dmm", currentWeather->rainOneHour, currentWeather->rainThreeHour);
-            tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR); 
-            tft->drawString(buffer, x + width, y);    
-  
+            tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR);
+            tft->drawString(buffer, x + width, y);
+
             y += tft->fontHeight();
         }
-        
+
         // sunrise
         time = currentWeather->sunRise + currentWeather->timeZone;
         timeInfo = gmtime(&time);
 
-        tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR); 
+        tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR, BACKGROUND_COLOUR);
         sprintf(buffer, "Sunrise: ");
         width = tft->textWidth(buffer);
-        tft->drawString(buffer, x, y);    
+        tft->drawString(buffer, x, y);
 
         formatClockString(buffer, timeInfo);
-        tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR); 
-        tft->drawString(buffer, x + width, y);   
+        tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR, BACKGROUND_COLOUR);
+        tft->drawString(buffer, x + width, y);
         y += tft->fontHeight();
 
         // setset
         time = currentWeather->sunSet + currentWeather->timeZone;
         timeInfo = gmtime(&time);
 
-        tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR); 
+        tft->setTextColor(DETAILED_WEATHER_DESCRIPTION_COLOUR, BACKGROUND_COLOUR);
         sprintf(buffer, "Sunset: ");
         width = tft->textWidth(buffer);
-        tft->drawString(buffer, x, y);    
+        tft->drawString(buffer, x, y);
 
         formatClockString(buffer, timeInfo);
-        tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR); 
-        tft->drawString(buffer, x + width, y);   
+        tft->setTextColor(DETAILED_WEATHER_INFO_COLOUR, BACKGROUND_COLOUR);
+        tft->drawString(buffer, x + width, y);
         y += tft->fontHeight();
     }
+
+    tft->unloadFont();
+
 }
 
 void DisplayTFT::drawWeatherNotEnabled()
 {
     tft->setTextDatum(MC_DATUM);
     tft->setTextFont(2);
-    tft->setTextColor(PRINT_MONITOR_TEXT_COLOUR, BACKGROUND_COLOUR); 
-    tft->drawString("Enable weather", tft->width()/2, tft->height()/4);   
-    tft->drawString("in settings", tft->width()/2, (tft->height()/4) + tft->fontHeight());  
+    tft->setTextColor(PRINT_MONITOR_TEXT_COLOUR, BACKGROUND_COLOUR);
+    tft->drawString("Enable weather", tft->width()/2, tft->height()/4);
+    tft->drawString("in settings", tft->width()/2, (tft->height()/4) + tft->fontHeight());
 }
 
 /****************************************************************************************
- * 
+ *
  *  Print monitor display
- * 
- * 
+ *
+ *
 ****************************************************************************************/
 
 void DisplayTFT::drawOctoPrintStatus(OctoPrintMonitorData* printData, String printerName, bool enabled)
@@ -419,26 +442,31 @@ void DisplayTFT::drawOctoPrintStatus(OctoPrintMonitorData* printData, String pri
 void DisplayTFT::drawInvalidPrintData(String printerName)
 {
     tft->setTextDatum(MC_DATUM);
-    tft->setTextFont(2);
-    tft->setTextColor(PRINT_MONITOR_TEXT_COLOUR, BACKGROUND_COLOUR); 
-    tft->drawString("No printer data available", tft->width()/2, tft->height()/4);   
+    //tft->setTextFont(2);
+    tft->loadFont(AA_FONT_SMALL);
+    tft->setTextColor(PRINT_MONITOR_TEXT_COLOUR, BACKGROUND_COLOUR);
+    tft->drawString("No printer data available", tft->width()/2, tft->height()/4);
 
     tft->setTextDatum(TC_DATUM);
-    tft->setTextColor(PRINT_MONITOR_PRINTER_NAME_COLOUR, BACKGROUND_COLOUR); 
+    tft->setTextColor(PRINT_MONITOR_PRINTER_NAME_COLOUR, BACKGROUND_COLOUR);
 
-    tft->drawString(printerName, tft->width()/2, TOOL_TEMP_DISPLAY_Y - 88);  
+    tft->drawString(printerName, tft->width()/2, TOOL_TEMP_DISPLAY_Y - 98);
+    tft->unloadFont();
+
 }
 
 void DisplayTFT::drawPrinterNotEnabled(String printerName)
 {
     tft->setTextDatum(TC_DATUM);
-    tft->setTextColor(PRINT_MONITOR_PRINTER_NAME_COLOUR, BACKGROUND_COLOUR); 
-    tft->drawString(printerName, tft->width()/2, TOOL_TEMP_DISPLAY_Y - 88);  
+    tft->setTextColor(PRINT_MONITOR_PRINTER_NAME_COLOUR, BACKGROUND_COLOUR);
+    tft->drawString(printerName, tft->width()/2, TOOL_TEMP_DISPLAY_Y - 88);
 
     tft->setTextDatum(MC_DATUM);
-    tft->setTextFont(2);
-    tft->setTextColor(PRINT_MONITOR_TEXT_COLOUR, BACKGROUND_COLOUR); 
-    tft->drawString("Printer not enabled", tft->width()/2, tft->height()/4);   
+    //tft->setTextFont(2);
+    tft->loadFont(AA_FONT_SMALL);
+    tft->setTextColor(PRINT_MONITOR_TEXT_COLOUR, BACKGROUND_COLOUR);
+    tft->drawString("Printer not enabled", tft->width()/2, tft->height()/4);
+    tft->unloadFont();
 }
 
 void DisplayTFT::drawNotSetupDisplay()
@@ -447,34 +475,39 @@ void DisplayTFT::drawNotSetupDisplay()
     int y  = tft->height()/4;
 
     tft->setTextDatum(MC_DATUM);
-    tft->setTextFont(2);
-    tft->setTextColor(PRINT_MONITOR_TEXT_COLOUR, BACKGROUND_COLOUR); 
-    tft->drawString("Enable weather or", tft->width()/2, y);   
+    //tft->setTextFont(2);
+    tft->loadFont(AA_FONT_SMALL);
+    tft->setTextColor(PRINT_MONITOR_TEXT_COLOUR, BACKGROUND_COLOUR);
+    tft->drawString("Enable weather or", tft->width()/2, y);
     y += tft->fontHeight();
-    tft->drawString("add a printer", tft->width()/2, y);  
+    tft->drawString("add a printer", tft->width()/2, y);
     y += tft->fontHeight() * 2;
     sprintf(buffer, "IP Address: %s", WiFi.localIP().toString().c_str());
-    tft->drawString(buffer, tft->width()/2, y); 
+    tft->drawString(buffer, tft->width()/2, y);
+    tft->unloadFont();
 }
 
 void DisplayTFT::drawPrintInfo(OctoPrintMonitorData* printData, String printerName)
 {
-    tft->setTextFont(2);
+    //tft->setTextFont(2);
+    tft->loadFont(AA_FONT_SMALL);
     tft->setTextDatum(TC_DATUM);
-    tft->setTextColor(PRINT_MONITOR_PRINTER_NAME_COLOUR, BACKGROUND_COLOUR); 
-    tft->setTextPadding(tft->width());  
+    tft->setTextColor(PRINT_MONITOR_PRINTER_NAME_COLOUR, BACKGROUND_COLOUR);
+    tft->setTextPadding(tft->width());
 
     String printer = printerName;
     if(printer == "")
     {
         printer = "Printer";
     }
-     
-    String title = getPrintInfoTitle(printer, printData->printerFlags);
-    tft->drawString(title, tft->width()/2, TOOL_TEMP_DISPLAY_Y - 88); 
 
-    drawTempArc("Tool", printData->tool0Temp, printData->tool0Target, TOOL_TEMP_MAX, TOOL_TEMP_DISPLAY_X, TOOL_TEMP_DISPLAY_Y);
-    drawTempArc("Bed", printData->bedTemp, printData->bedTarget, BED_TEMP_MAX, BED_TEMP_DISPLAY_X, BED_TEMP_DISPLAY_Y);
+    String title = getPrintInfoTitle(printer, printData->printerFlags);
+    tft->drawString(title, tft->width()/2, TOOL_TEMP_DISPLAY_Y - 98);
+
+    tft->unloadFont();
+
+    drawTempArc("TOOL", printData->tool0Temp, printData->tool0Target, TOOL_TEMP_MAX, TOOL_TEMP_DISPLAY_X, TOOL_TEMP_DISPLAY_Y -20);
+    drawTempArc("BED", printData->bedTemp, printData->bedTarget, BED_TEMP_MAX, BED_TEMP_DISPLAY_X, BED_TEMP_DISPLAY_Y -20);
 
     tft->drawLine(0, PRINT_INFO_SECTION_DIVIDER_Y, tft->width(), PRINT_INFO_SECTION_DIVIDER_Y, SECTION_HEADER_LINE_COLOUR);
 
@@ -484,8 +517,9 @@ void DisplayTFT::drawPrintInfo(OctoPrintMonitorData* printData, String printerNa
     }
     else
     {
-        tft->fillRect(0, PRINT_INFO_SECTION_DIVIDER_Y + 1, tft->width(), TIME_Y - PRINT_INFO_SECTION_DIVIDER_Y - 1, BACKGROUND_COLOUR);
-    }   
+      drawJobInfo(printData, PRINT_INFO_SECTION_DIVIDER_Y);
+        //tft->fillRect(0, PRINT_INFO_SECTION_DIVIDER_Y + 1, tft->width(), TIME_Y - PRINT_INFO_SECTION_DIVIDER_Y - 1, BACKGROUND_COLOUR);
+    }
 }
 
 void DisplayTFT::drawJobInfo(OctoPrintMonitorData* printData, int y)
@@ -495,93 +529,94 @@ void DisplayTFT::drawJobInfo(OctoPrintMonitorData* printData, int y)
     char buffer[128];
     char timeBuffer[32];
     int infoX, elapsedPadding;
-    
+
     x = (tft->width() / 2) - (PRINT_PROGRESS_BAR_WIDTH / 2);
     y += 15;
-    
-    drawProgressBar(printData->percentComplete, x, y, PRINT_PROGRESS_BAR_WIDTH, PRINT_PROGRESS_BAR_HEIGHT, 
+
+    drawProgressBar(printData->percentComplete * 100, x, y, PRINT_PROGRESS_BAR_WIDTH, PRINT_PROGRESS_BAR_HEIGHT,
         PRINT_MONITOR_PROGRESS_BAR_COLOUR, PRINT_MONITOR_PROGRESS_BAR_BACKGROUND_COLOUR);
 
     y += PRINT_PROGRESS_BAR_HEIGHT;
-    y += 15;
+    y += 10;
     x = 20;
 
-    tft->setTextFont(2);
+    //tft->setTextFont(2);
+    tft->loadFont(AA_FONT_SMALL);
     tft->setTextDatum(TL_DATUM);
 
     // estimated time
-    tft->setTextColor(PRINT_MONITOR_JOB_INFO_HEADING_COLOUR, BACKGROUND_COLOUR); 
-    infoX = x + tft->drawString("Estimated time: ", x, y);        
-    
+    tft->setTextColor(PRINT_MONITOR_JOB_INFO_HEADING_COLOUR, BACKGROUND_COLOUR);
+    infoX = x + tft->drawString("Estimated", x, y + 16);
+
     sprintf(buffer, "999:59:59");
     tft->setTextPadding(tft->textWidth(buffer));
-    tft->setTextColor(PRINT_MONITOR_JOB_INFO_COLOUR, BACKGROUND_COLOUR); 
+    tft->setTextColor(PRINT_MONITOR_JOB_INFO_COLOUR, BACKGROUND_COLOUR);
     formatSeconds(estimatedTimeBuffer, (int)printData->estimatedPrintTime);
     sprintf(buffer, "%s", estimatedTimeBuffer);
     elapsedPadding = tft->textWidth(estimatedTimeBuffer);
-    tft->drawString(buffer, infoX, y);    
-    y += tft->fontHeight();
+    tft->drawString(buffer, x, y);
+    //y += tft->fontHeight();
 
     // elapsed print time
-    tft->setTextColor(PRINT_MONITOR_JOB_INFO_HEADING_COLOUR, BACKGROUND_COLOUR); 
-    infoX = x + tft->drawString("Print time: ", x, y);    
+    tft->setTextColor(PRINT_MONITOR_JOB_INFO_HEADING_COLOUR, BACKGROUND_COLOUR);
+    infoX = x + tft->drawString("Printing", x + 100, y + 16);
 
-    tft->setTextColor(PRINT_MONITOR_JOB_INFO_COLOUR, BACKGROUND_COLOUR); 
+    tft->setTextColor(PRINT_MONITOR_JOB_INFO_COLOUR, BACKGROUND_COLOUR);
     tft->setTextPadding(elapsedPadding);
 
     if(printData->printTimeElapsed > 0.0f)
     {
         formatSeconds(timeBuffer, (int)printData->printTimeElapsed);
-        tft->drawString(timeBuffer, infoX, y);
+        tft->drawString(timeBuffer, x + 100, y);
     }
     else
     {
-        tft->drawString("-", infoX, y);    
-    }    
-    y += tft->fontHeight();
+        tft->drawString("-", x + 100, y);
+    }
+    //y += tft->fontHeight();
 
     // remaining
-    tft->setTextColor(PRINT_MONITOR_JOB_INFO_HEADING_COLOUR, BACKGROUND_COLOUR); 
-    infoX = x + tft->drawString("Remaining time: ", x, y);    
+    tft->setTextColor(PRINT_MONITOR_JOB_INFO_HEADING_COLOUR, BACKGROUND_COLOUR);
+    infoX = x + tft->drawString("Remaining", x + 200, y + 16);
 
-    tft->setTextColor(PRINT_MONITOR_JOB_INFO_COLOUR, BACKGROUND_COLOUR); 
+    tft->setTextColor(PRINT_MONITOR_JOB_INFO_COLOUR, BACKGROUND_COLOUR);
 
     if(printData->printTimeElapsed > 0.0f)
     {
         float remaining = printData->printTimeRemaining;
         remaining = max(0.0f, remaining);
         formatSeconds(timeBuffer, (int)remaining);
-        tft->drawString(timeBuffer, infoX, y);
+        tft->drawString(timeBuffer, x + 200, y);
     }
     else
     {
-        tft->drawString("-", infoX, y);    
+        tft->drawString("-", x + 200, y);
     }
-    y += tft->fontHeight();
+    y += tft->fontHeight() * 3 - 4;
 
     // filament length
     int padding;
-    
-    tft->setTextColor(PRINT_MONITOR_JOB_INFO_HEADING_COLOUR, BACKGROUND_COLOUR); 
-    infoX = x + tft->drawString("Filament: ", x, y);    
 
-    tft->setTextColor(PRINT_MONITOR_JOB_INFO_COLOUR, BACKGROUND_COLOUR); 
-
-    sprintf(buffer, "9999.9m");
-    padding = tft->textWidth(buffer);
-    tft->setTextPadding(padding);
-
-    sprintf(buffer, "%.02fm", printData->filamentLength / 1000.0f);
-    tft->drawString(buffer, infoX, y);
+    //tft->setTextColor(PRINT_MONITOR_JOB_INFO_HEADING_COLOUR, BACKGROUND_COLOUR);
+    //infoX = x + tft->drawString("Filament: ", x, y);
+    //
+    //tft->setTextColor(PRINT_MONITOR_JOB_INFO_COLOUR, BACKGROUND_COLOUR);
+    //
+    //sprintf(buffer, "9999.9m");
+    //padding = tft->textWidth(buffer);
+    //tft->setTextPadding(padding);
+    //
+    //sprintf(buffer, "%.02fm", printData->filamentLength / 1000.0f);
+    //tft->drawString(buffer, infoX, y);
 
     // file name
-    y += tft->fontHeight();
+    //y += tft->fontHeight();
 
-    tft->setTextColor(PRINT_MONITOR_JOB_INFO_HEADING_COLOUR, BACKGROUND_COLOUR); 
-    tft->drawString("File:", x, y);
-    y += tft->fontHeight();
+    //tft->setTextColor(PRINT_MONITOR_JOB_INFO_HEADING_COLOUR, BACKGROUND_COLOUR);
+    //tft->drawString("File:", x, y);
+    //y += tft->fontHeight();
 
-    tft->setTextColor(PRINT_MONITOR_JOB_INFO_COLOUR, BACKGROUND_COLOUR); 
+    tft->setTextColor(PRINT_MONITOR_JOB_INFO_COLOUR, BACKGROUND_COLOUR);
 
     String file = printData->fileName;
     bool truncatedDescription = false;
@@ -598,7 +633,10 @@ void DisplayTFT::drawJobInfo(OctoPrintMonitorData* printData, int y)
     }
 
     tft->setTextPadding(tft->width() - x);
-    tft->drawString(file, x, y); 
+    tft->drawString(file, x, y);
+
+    tft->unloadFont();
+
 }
 
 void DisplayTFT::formatSeconds(char* buffer, int seconds)
@@ -611,7 +649,7 @@ void DisplayTFT::formatSeconds(char* buffer, int seconds)
     seconds = seconds % 60;
     seconds = seconds;
 
-    sprintf(buffer, "%02d:%02d:%02d", hours, minutes, seconds);    
+    sprintf(buffer, "%02d:%02d:%02d", hours, minutes, seconds);
 }
 
 void DisplayTFT::drawProgressBar(float percent, int x, int y, int width, int height, uint32_t barColour, uint32_t backgroundColour)
@@ -625,17 +663,20 @@ void DisplayTFT::drawProgressBar(float percent, int x, int y, int width, int hei
     barX = x + 10;  // space for text
 
     completedWidth = (PRINT_PROGRESS_BAR_WIDTH * percent) / 100.0f;
-    tft->fillRect(barX, y, completedWidth, 10, barColour);
+    tft->fillRect(barX, y, completedWidth, 8, barColour);
     tft->fillRect(barX + completedWidth, y, PRINT_PROGRESS_BAR_WIDTH - completedWidth, height, backgroundColour);
     tft->drawRect(barX -1, y -1, PRINT_PROGRESS_BAR_WIDTH + 2, height + 2, PRINT_MONITOR_PROGRESS_BAR_OUTLINE_COLOUR);
 
-    tft->setTextFont(2);
-    tft->setTextColor(PRINT_MONITOR_PROGRESS_COLOUR, BACKGROUND_COLOUR); 
+    //tft->setTextFont(2);
+    tft->loadFont(AA_FONT_SMALL);
+    tft->setTextColor(PRINT_MONITOR_PROGRESS_COLOUR, BACKGROUND_COLOUR);
     tft->setTextDatum(CR_DATUM);
     tft->setTextPadding(tft->textWidth("100%"));
 
     sprintf(buffer, "%d%%", (int)percent);
     tft->drawString(buffer, x, y + (height / 2));
+
+    tft->unloadFont();
 }
 
 String DisplayTFT::getPrintInfoTitle(String printerName, uint16_t flags)
@@ -661,7 +702,7 @@ String DisplayTFT::getPrintInfoTitle(String printerName, uint16_t flags)
     else if(flags & PRINT_STATE_PAUSED)
     {
         title = printerName + " - Paused";
-    }    
+    }
     else if(flags & PRINT_STATE_RESUMING)
     {
         title = printerName + " - Resuming";
@@ -688,30 +729,40 @@ void DisplayTFT::drawTempArc(String title, float value, float target, float max,
     int endAngle;
     int padding;
 
-    tft->setTextFont(2);
-    tft->setTextColor(PRINT_MONITOR_TEMP_HEADING_COLOUR, BACKGROUND_COLOUR); 
+    //tft->setTextFont(2);
+    tft->loadFont(AA_FONT_SMALL);
+    tft->setTextColor(PRINT_MONITOR_TEMP_HEADING_COLOUR, BACKGROUND_COLOUR);
     tft->setTextDatum(BC_DATUM);
     padding = tft->textWidth(title);
     tft->setTextPadding(padding);
     tft->drawString(title, x, y - 50);
+    tft->unloadFont();
 
-    tft->setTextFont(4);
-    tft->setTextColor(PRINT_MONITOR_ACTUAL_TEMP_COLOUR, BACKGROUND_COLOUR); 
+
+    //tft->setTextFont(4);
+    tft->loadFont(AA_FONT_LARGE);
+    tft->setTextColor(PRINT_MONITOR_ACTUAL_TEMP_COLOUR, BACKGROUND_COLOUR);
     sprintf(buffer, "%.0fC", max);
     padding = tft->textWidth(buffer);
     tft->setTextPadding(padding);
     tft->setTextDatum(TC_DATUM);
 
+
     sprintf(buffer, "%.0fC", value);
     tft->drawString(buffer, x, y + 20);
+    tft->unloadFont();
 
-    tft->setTextFont(2);
-    tft->setTextColor(PRINT_MONITOR_TARGET_TEMP_COLOUR, BACKGROUND_COLOUR); 
+
+    //tft->setTextFont(2);
+    tft->loadFont(AA_FONT_SMALL);
+    tft->setTextColor(PRINT_MONITOR_TARGET_TEMP_COLOUR, BACKGROUND_COLOUR);
     sprintf(buffer, "%.0fC", max);
     padding = tft->textWidth(buffer);
     tft->setTextDatum(BC_DATUM);
     sprintf(buffer, "%.0fC", target);
     tft->drawString(buffer, x, y);
+    tft->unloadFont();
+
 
     float temp = min(value, max);
     float segments = ((temp / max) * TEMP_ARC_SPAN) / TEMP_ARC_DEGREE_PER_SEG;
@@ -723,10 +774,10 @@ void DisplayTFT::drawTempArc(String title, float value, float target, float max,
 }
 
 /****************************************************************************************
- * 
+ *
  *  Misc
- * 
- * 
+ *
+ *
 ****************************************************************************************/
 
 void DisplayTFT::formatClockString(char* buffer, tm* timeInfo)
@@ -775,7 +826,7 @@ char* DisplayTFT::getTempPostfix()
 }
 
 const unsigned short* DisplayTFT::getIconData(String iconId)
-{    
+{
     // convert icon code from weather to our image, not all handled
     if(iconId == "01d")
     {
@@ -856,10 +907,10 @@ const unsigned short* DisplayTFT::getIconData(String iconId)
 }
 
 /****************************************************************************************
- * 
+ *
  *  Screen server routines
  *  From TFT-eSPI library
- * 
+ *
 ****************************************************************************************/
 
 void DisplayTFT::serveScreenShot()
@@ -1008,9 +1059,9 @@ void DisplayTFT::sendParameters(String filename)
 }
 
 /****************************************************************************************
- * 
+ *
  *  From TFT library samples
- * 
+ *
 ****************************************************************************************/
 
 // #########################################################################

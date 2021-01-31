@@ -10,7 +10,7 @@
 // TFT settings
 
 // change depending if your screen is pins up or down, 0 is usually down, 2 for up
-#define SCREEN_ROTATION 2
+#define SCREEN_ROTATION 1
 
 // Pin used for brightness control. Just connect LED pin on TFT to 3.3V if not required.
 #define BRIGHTNESS_PIN          16   // D0

@@ -7,6 +7,9 @@
 #define OCTOPRINT_JOB       "/api/job"
 #define OCTOPRINT_PRINTER   "/api/printer?exclude=sd"
 
+#define MOONRAKER_INFO          "/printer/objects/query?print_stats&display_status&virtual_sdcard&toolhead"
+#define MOONRAKER_PRINTERINFO   "/printer/objects/query?heater_bed&extruder&print_stats&display_status&virtual_sdcard&display_status&toolhead"
+
 #define PRINT_STATE_CANCELLING          1
 #define PRINT_STATE_CLOSED_OR_ERROR     1 << 1
 #define PRINT_STATE_ERROR               1 << 2
@@ -47,7 +50,7 @@ class OctoPrintMonitor
 {
     public:
         //void init(String server, int port, String apiKey, String userName, String password);
-        void setCurrentPrinter(String server, int port, String apiKey, String userName, String password);
+        void setCurrentPrinter(String server, int port, String apiKey, String userName, String password, String type);
         void update();
         OctoPrintMonitorData* getCurrentData() { return &data; }
 
@@ -62,6 +65,7 @@ class OctoPrintMonitor
         String server;
         String userName;
         String password;
+        String type;
         int port;
 
         OctoPrintMonitorData data;

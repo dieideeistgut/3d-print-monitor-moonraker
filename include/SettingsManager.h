@@ -49,6 +49,7 @@ typedef struct OctoPrinterData
     String apiKey;
     String displayName;
     bool enabled;
+    String type;
 } OctoPrinterData;
 
 class SettingsManager
@@ -72,7 +73,7 @@ class SettingsManager
 
         int getCurrentWeatherInterval();
         void setCurrentWeatherInterval(int interval);
-        
+
         int getPrintMonitorInterval();
         void setPrintMonitorInterval(int interval);
 
@@ -82,8 +83,8 @@ class SettingsManager
         int getNumPrinters();
         int getNumEnabledPrinters();
         OctoPrinterData* getPrinterData(int printerNum);
-        void addNewPrinter(String address, int port, String userName, String password, String apiKey, String displayName, bool enabled);
-        void editPrinter(int printerNum, String address, int port, String userName, String password, String apiKey, String displayName, bool enabled);
+        void addNewPrinter(String address, int port, String userName, String password, String apiKey, String displayName, bool enabled, String type);
+        void editPrinter(int printerNum, String address, int port, String userName, String password, String apiKey, String displayName, bool enabled, String type);
         void deletePrinter(int printerNum);
 
         long getUtcOffset();

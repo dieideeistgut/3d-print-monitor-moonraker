@@ -33,7 +33,7 @@ Task getCurrentWeather(60*SECONDS_MULT, TASK_FOREVER, &getCurrentWeatherCallback
 Task updateWiFiStrength(WIFI_STRENGTH_INTERVAL, TASK_FOREVER, &updateWifiStrengthCallback);
 Task checkScreenGrabRequested(SCREENGRAB_INTERVAL, TASK_FOREVER, &checkScreenGrabCallback);
 Task octoPrintUpdate(5*MINUTES_MULT, TASK_FOREVER, &updatePrinterMonitorCallback);
-Task cycleDisplay(30*SECONDS_MULT, TASK_FOREVER, &cycleDisplayCallback);     
+Task cycleDisplay(30*SECONDS_MULT, TASK_FOREVER, &cycleDisplayCallback);
 
 // task callbacks
 
@@ -65,14 +65,15 @@ void updatePrinterMonitorCallback()
 
     if(printerData->enabled)
     {
-        octoPrintMonitor.setCurrentPrinter(printerData->address, printerData->port, printerData->apiKey, printerData->username, printerData->password);
+        octoPrintMonitor.setCurrentPrinter(printerData->address, printerData->port, printerData->apiKey, printerData->username, printerData->password, printerData->type);
         octoPrintMonitor.update();
     }
-    
+
     display->drawOctoPrintStatus(octoPrintMonitor.getCurrentData(), printerData->displayName, printerData->enabled);
     webServer.updatePrintMonitorInfo(octoPrintMonitor.getCurrentData(), printerData->displayName, printerData->enabled);
 
-    Serial.println("updatePrinterMonitorCallback");
+    //Serial.print(timeClient.getEpochTime());
+    //Serial.println("updatePrinterMonitorCallback");
 }
 
 // wifi
@@ -195,7 +196,7 @@ void setupDisplay()
                 display->setDisplayMode(DisplayMode_Weather);
                 currentPrinter = -1;
                 octoPrintUpdate.disable();
-                cycleDisplay.enableDelayed(settingsManager.getDisplayCycleInterval());    
+                cycleDisplay.enableDelayed(settingsManager.getDisplayCycleInterval());
             }
             else
             {
@@ -203,8 +204,8 @@ void setupDisplay()
                 octoPrintUpdate.enableIfNot();
                 octoPrintUpdate.forceNextIteration();
                 display->setDisplayMode(DisplayMode_PrintMonitor);
-                cycleDisplay.enableDelayed(settingsManager.getDisplayCycleInterval());    
-            }            
+                cycleDisplay.enableDelayed(settingsManager.getDisplayCycleInterval());
+            }
             break;
 
         case WEATHER_DISPLAY_SETTING:
@@ -255,7 +256,7 @@ void cycleDisplayCallback()
             {
                 currentPrinter = -1;
                 cycleDisplayCallback();
-            }            
+            }
         }
     }
 }
@@ -274,7 +275,7 @@ int getNextPrinter(int currentPrinter)
     {
         startingPrinter = currentPrinter + 1;
     }
-    
+
     for(int i=startingPrinter; i<settingsManager.getNumPrinters() && foundPrinter == -1; i++)
     {
         OctoPrinterData* printerData = settingsManager.getPrinterData(i);
@@ -289,7 +290,7 @@ int getNextPrinter(int currentPrinter)
 
 // basic setup and loop
 
-void setup() 
+void setup()
 {
     Serial.begin(115200);
 
@@ -299,14 +300,14 @@ void setup()
 
     currentWeatherClient.setLanguage("en");
 
-    WiFi.hostname("OctoPrint-Monitor");
+    WiFi.hostname("Screeny");
 
-    taskScheduler.startNow(); 
+    taskScheduler.startNow();
     taskScheduler.addTask(connectWifi);
     connectWifi.enable();
 }
 
-void loop() 
+void loop()
 {
     taskScheduler.execute();
     ArduinoOTA.handle();
@@ -337,7 +338,7 @@ void setupOtaUpdates()
         }
     });
 
-    ArduinoOTA.onEnd([]() 
+    ArduinoOTA.onEnd([]()
     {
         Serial.println("\nEnd");
     });

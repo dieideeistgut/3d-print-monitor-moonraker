@@ -1,5 +1,5 @@
 // Based on work by ThingPulse Ltd., https://thingpulse.com
- 
+
 #include <WiFiClient.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
@@ -35,6 +35,9 @@ String OpenWeatherMapCurrent::buildUrl(String appId, String locationParameter)
 
 void OpenWeatherMapCurrent::doUpdate(String url)
 {
+
+    Serial.println(url);
+
     data.validData = false;
 
     // must be in this order
@@ -49,7 +52,7 @@ void OpenWeatherMapCurrent::doUpdate(String url)
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
         {
             deserializeWeather(http.getString());
-        }        
+        }
     }
     http.end();
 }
@@ -67,7 +70,7 @@ void OpenWeatherMapCurrent::deserializeWeather(String json)
     data.icon = (const char*)weather_0["icon"];
 
     data.windSpeed = doc["wind"]["speed"];
-    data.windDeg = doc["wind"]["deg"]; 
+    data.windDeg = doc["wind"]["deg"];
     data.observationTime = doc["dt"];
     data.timeZone = doc["timezone"];
     data.location = (const char*)doc["name"];
@@ -77,8 +80,8 @@ void OpenWeatherMapCurrent::deserializeWeather(String json)
     data.tempMin = main["temp_min"];
     data.tempMax = main["temp_max"];
     data.pressure = main["pressure"];
-    data.humidity = main["humidity"];   
-    
+    data.humidity = main["humidity"];
+
     data.description = captaliseString(data.description);
     data.main = captaliseString(data.main);
 
@@ -126,7 +129,7 @@ String OpenWeatherMapCurrent::captaliseString(String input)
         char c = input.charAt(i);
         if(last == ' ' && c != ' ' && isAlpha(c))
         {
-            input.setCharAt(i, toUpperCase(c));            
+            input.setCharAt(i, toUpperCase(c));
         }
         last = c;
     }
